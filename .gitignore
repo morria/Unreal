@@ -19,3 +19,6 @@ server.req.pem
 src/modules/Makefile
 ssl.rnd
 unreal
+src/ircd
+*.so
+*.o

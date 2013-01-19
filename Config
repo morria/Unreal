@@ -1,0 +1,1004 @@
+#!/bin/sh
+#
+# Config script for UnrealIRCd
+# (C) 2001 The UnrealIRCd Team
+#
+# This configure script is free software; the UnrealIRCd Team gives 
+# unlimited permission to copy, distribute and modify as long as the
+# copyright headers stay intact
+#
+#
+# Rewritten completely to be an interface to autoconf by codemastr
+# This was inspired by the config by Michael Graff (explorer@flame.org)
+# but was written from scratch
+
+# In order to be faster than the old Config, this assumes that all information
+# in the cache file is valid and therefore doesn't check it, so if you messed with
+# default values thats your problem :P
+
+# some bits edited by baafie on March 17 2004, every change marked.
+
+
+RUN_CONFIGURE () {
+ARG=" "
+# Do this even if we're not in advanced mode
+if [ "$SHOWLISTMODES" = "1" ] ; then
+	ARG="$ARG--with-showlistmodes "
+fi
+if [ "$ADVANCED" = "1" ] ; then
+if [ "$TOPICNICKISNUH" = "1" ] ; then
+	ARG="$ARG--with-topicisnuhost "
+fi
+if [ "$SHUNNOTICES" = "1" ] ; then
+	ARG="$ARG--with-shunnotices "
+fi
+if [ "$NOOPEROVERRIDE" = "1" ] ; then
+	ARG="$ARG--with-no-operoverride "
+fi
+if [ "$DISABLEUSERMOD" = "1" ] ; then
+	ARG="$ARG--with-disableusermod "
+fi
+if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
+	ARG="$ARG--with-operoverride-verify "
+fi
+if [ "$DISABLEEXTBANSTACKING" = "1" ]; then
+	ARG="$ARG--with-disable-extendedban-stacking ";
+fi
+fi
+if [  "$CRYPTOIRCD" = "1" ] ; then
+if test x"$SSLDIR" = "x" ; then
+ARG="$ARG--enable-ssl "
+else
+ARG="$ARG--enable-ssl=$SSLDIR "
+fi
+fi
+if [ "$ZIPLINKS" = "1" ] ; then
+if test x"$ZIPLINKSDIR" = "x" ; then
+ARG="$ARG--enable-ziplinks "
+else
+ARG="$ARG--enable-ziplinks=$ZIPLINKSDIR "
+fi
+fi
+if [ "$REMOTEINC" = "1" ] ; then
+ARG="$ARG--enable-libcurl=$CURLDIR "
+fi
+if [ "$INET6" = "1" ] ; then
+ARG="$ARG--enable-inet6 "
+fi
+if [ "$PREFIXAQ" != "1" ]; then
+ARG="$ARG--disable-prefixaq "
+fi
+ARG="$ARG--with-listen=$LISTEN_SIZE "
+ARG="$ARG--with-dpath=$DPATH "
+ARG="$ARG--with-spath=$SPATH "
+ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
+ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
+ARG="$ARG--with-bufferpool=$BUFFERPOOL "
+ARG="$ARG--with-permissions=$DEFPERM "
+ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
+ARG="$ARG--enable-dynamic-linking "
+ARG="$ARG $EXTRAPARA "
+CONF="./configure $ARG"
+if [ "x$INSTALLCURL" = "x1" ]; then
+	./curlinstall || exit 1
+fi
+echo $CONF
+$CONF || exit 1
+cd "$UNREALCWD"
+if [  "$CRYPTOIRCD" = "1" ] ; then
+if [ ! -f server.req.pem ]; then
+export OPENSSLPATH
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$GENCERTIFICATE" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to generate an SSL certificate for the IRCd?"
+    echo "Only answer No if you already have one."
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    GENCERTIFICATE="1"
+	    ;;
+	[Nn]*)
+	    GENCERTIFICATE=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+if [ "$GENCERTIFICATE" = 1 ]; then
+	make pem
+	cat .SICI
+	read cc
+else
+echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
+echo "are installed as server.crt.pem and server.key.pem prior to starting the IRCd."
+fi
+else
+echo "SSL certificate already existing, no need to regenerate"
+fi
+fi
+}
+
+RUN_ADVANCED () {
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$SHOWLISTMODES" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to show the modes a channel has set in the /list output?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    SHOWLISTMODES="1"
+	    ;;
+	[Nn]*)
+	    SHOWLISTMODES=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$TOPICNICKISNUH" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want the /topic command to show the nick!user@host of the person"
+    echo "who set the topic, rather than just the nickname?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    TOPICNICKISNUH="1"
+	    ;;
+	[Nn]*)
+	    TOPICNICKISNUH=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$SHUNNOTICES" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Should Unreal notify a user when they are no longer shunned?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    SHUNNOTICES="1"
+	    ;;
+	[Nn]*)
+	    SHUNNOTICES=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$NOOPEROVERRIDE" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to disable oper override?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    NOOPEROVERRIDE="1"
+	    ;;
+	[Nn]*)
+	    NOOPEROVERRIDE=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$DISABLEUSERMOD" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to disable /sethost, /setident, /chgname,"
+    echo "/chghost, and /chgident?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    DISABLEUSERMOD="1"
+	    ;;
+	[Nn]*)
+	    DISABLEUSERMOD=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to require opers to /invite themselves into a +s or +p channel?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    OPEROVERRIDEVERIFY="1"
+	    ;;
+	[Nn]*)
+	    OPEROVERRIDEVERIFY=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$DISABLEEXTBANSTACKING" = "1" ] ; then
+        TEST="Yes"
+    else
+        TEST="No"
+    fi
+    echo ""
+    echo "Do you want to disable extended ban stacking (~q:~c:#test, etc) support?"
+    echo $n "[$TEST] -> $c"
+        read cc
+    if [ -z "$cc" ] ; then
+        cc=$TEST
+    fi
+    case "$cc" in
+        [Yy]*)
+            DISABLEEXTBANSTACKING="1"
+            ;;
+        [Nn]*)
+            DISABLEEXTBANSTACKING="0"
+            ;;
+        *)
+            echo ""
+            echo "You must enter either Yes or No"
+            TEST=""
+            ;;
+    esac
+done
+
+}
+c=""
+n=""
+UNREALCWD="`pwd`"
+DPATH="`pwd`"
+SPATH="`pwd`/src/ircd"
+DEFPERM="0600"
+CRYPTOIRCD=""
+SSLDIR=""
+ZIPLINKS=""
+ZIPLINKSDIR=""
+LISTEN_SIZE="5"
+NICKNAMEHISTORYLENGTH="2000"
+MAXSENDQLENGTH="3000000"
+BUFFERPOOL="18"
+MAXCONNECTIONS="1024"
+INET6=""
+REMOTEINC=""
+CURLDIR=""
+PREFIXAQ="1"
+SHOWLISTMODES="1"
+TOPICNICKISNUH=""
+SHUNNOTICES=""
+NOOPEROVERRIDE=""
+DISABLEUSERMOD=""
+OPEROVERRIDEVERIFY=""
+DISABLEEXTBANSTACKING=""
+GENCERTIFICATE="1"
+EXTRAPARA=""
+if [ "`eval echo -n 'a'`" = "-n a" ] ; then
+        c="\c"
+else
+        n="-n"
+fi
+
+
+#parse arguments
+NOCACHE=""
+NOINTRO=""
+CLEAN=""
+ADVANCED=""
+while [ $# -ge 1 ] ; do
+	if [ $1 = "--help" ] ; then
+		echo "Config utility for UnrealIRCd"
+		echo "-----------------------------"
+		echo "Syntax: ./Config [options]"
+		echo "-nocache     Ignore settings saved in config.settings"
+		echo "-nointro     Skip intro (release notes, etc)"
+		echo "-quick       Skip questions, go straight to configure"
+		echo "-advanced    Include additional advanced questions"
+		echo "-clean       Clean ./configure cache"
+		exit 0
+	elif [ $1 = "-nocache" ] ; then
+		NOCACHE="1"
+	elif [ $1 = "-nointro" ] ; then
+		NOINTRO="1"
+	elif [ $1 = "-quick" -o $1 = "-q" ] ; then
+		echo "running quick config"
+		if [ -f "config.settings" ] ; then
+			. ./config.settings
+		fi
+		RUN_CONFIGURE
+		cd "$UNREALCWD"
+		exit 0
+	elif [ $1 = "-clean" -o $1 = "-C" ] ; then
+		CLEAN="1"
+	elif [ $1 = "-advanced" ] ; then
+		PREADVANCED="1"
+	fi
+	shift 1
+done
+
+if [ -f "config.settings" -a -z "$NOCACHE" ] ; then
+    . ./config.settings
+fi
+
+if [ "$PREADVANCED" = "1" ] ; then
+	ADVANCED="1"
+elif [ "$ADVANCED" = "1" ]; then
+	ADVANCED=""
+fi
+
+if [ -n "$CLEAN" ] ; then
+	rm -f config.cache
+fi
+
+clear
+
+    if [ -f ".CHANGES.NEW" -a -z "$NOINTRO" ] ; then
+        more .CHANGES.NEW
+        echo $n "[Enter to continue]"
+        read cc
+        clear
+    fi
+    if [ -f ".RELEASE.NOTES" -a -z "$NOINTRO" ] ; then
+        more .RELEASE.NOTES
+        echo $n "[Enter to continue]"
+        read cc
+        clear
+    fi
+
+TEST="$DPATH"
+echo ""
+echo "What directory are all the server configuration files in?"
+echo $n "[$TEST] -> $c"
+read cc
+if [ -z "$cc" ] ; then
+   DPATH=$TEST
+else
+   DPATH=`eval echo $cc` # modified
+fi
+
+TEST=""
+SAVEME="$SPATH"
+while [ -z "$TEST" ] ; do
+    TEST="$SAVEME"
+    echo ""
+    echo "What is the path to the ircd binary including the name of the binary?"
+    echo $n "[$TEST] -> $c"
+        read cc
+    if [ -z "$cc" ] ; then
+        SPATH=$TEST
+    else 
+        SPATH=`eval echo $cc` # modified
+    fi
+    if [ "$SPATH" = "$DPATH" ]; then
+    	echo ""
+    	echo "You need to specify the path to the BINARY, not to a directory."
+	echo "The answer to this question can never be identical to the previous one."
+    	echo "HINT: perhaps you want $DPATH/ircd ?"
+    	TEST=""
+    fi
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$DEFPERM"
+    echo ""
+    echo "What should the default permissions for your configuration files be? (Set this to 0 to disable)"
+    echo "It is strongly recommended that you use 0600 to prevent unwanted reading of the file"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	DEFPERM=$TEST
+	break
+    fi
+    case "$cc" in
+	[0-9]*)
+	    DEFPERM="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number"
+	    TEST=""
+	    ;;
+    esac
+
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$CRYPTOIRCD" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to support SSL (Secure Sockets Layer) connections?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    CRYPTOIRCD="1"
+	    ;;
+	[Nn]*)
+	    CRYPTOIRCD=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+if [ "$CRYPTOIRCD" = "1" ] ; then
+TEST="$SSLDIR"
+echo ""
+echo "If you know the path to OpenSSL on your system, enter it here. If not"
+echo "leave this blank (in most cases it will be detected automatically)."
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    SSLDIR="$TEST"
+else 
+    SSLDIR=`eval echo $cc` # modified
+fi
+fi
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$INET6" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable IPv6 support?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    INET6="1"
+	    ;;
+	[Nn]*)
+	    INET6=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$ZIPLINKS" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable ziplinks support?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    ZIPLINKS="1"
+	    ;;
+	[Nn]*)
+	    ZIPLINKS=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+if [ "$ZIPLINKS" = "1" ] ; then
+TEST="$ZIPLINKSDIR"
+echo ""
+echo "If you know the path to zlib on your system, enter it here. If not"
+echo "leave this blank"
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    ZIPLINKSDIR="$TEST"
+else 
+    ZIPLINKSDIR=`eval echo $cc` # modified
+fi
+fi
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$REMOTEINC" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable remote includes?"
+    echo "This allows stuff like this in your configuration file:"
+    echo "include \"http://www.somesite.org/files/opers.conf\";"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    REMOTEINC="1"
+	    ;;
+	[Nn]*)
+	    REMOTEINC=""
+	    CURLDIR=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+if [ "$REMOTEINC" = "1" ] ; then
+	if [ ! -d "$CURLDIR" ]; then
+		# Reset any previous CURLDIR if it doesn't exist (anymore)
+		CURLDIR=""
+	fi
+
+
+	INSTALLCURL="0"
+        if [ "x$CURLDIR" = "x" ]; then
+	        # There is no reason to support this:
+	        if [ -d "/usr/local/include/curl" ]; then
+		    CURLDIR="/usr/local"
+		fi
+	        # Zeroeth, let's act SANE
+	        if [ -d "/usr/include/curl" ]; then
+		    CURLDIR="/usr"
+		fi
+                # First, let's make shell admins happy...
+                if [ -d "/usr/share/unreal-curl" ]; then
+                        CURLDIR="/usr/share/unreal-curl"
+                fi
+
+                GOTASYNC=0
+                if [ "x$CURLDIR" != "x" ]; then
+                    # Check if it's of any use: a curl without async dns (cares) hangs the entire ircd..
+                    # normally this is done in ./configure but now we're forced to do it also here..
+                    if "$CURLDIR"/bin/curl-config --features | grep -q -e AsynchDNS; then
+                        GOTASYNC="1"
+                    fi
+                  if [ "$GOTASYNC" != "1" ]; then
+                          PREVCURLDIR="$CURLDIR"
+                          CURLDIR=""
+                  fi
+                fi
+                
+                # Second, use the local curl if it exists (overrides above)
+                if [ -d "$HOME/curl" ]; then
+                        CURLDIR="$HOME/curl"
+                        
+                        # Check if it's recent enough...
+                        # But first, check if curl-config can be trusted at all: it depends
+                        # on 'bc' for some reason and not all systems have that installed!
+                        echo "1+1"|bc 1>/dev/null 2>&1
+                        if [ "$?" = 0 ]; then
+                            "$CURLDIR"/bin/curl-config --checkfor 7.21.0
+                            if [ "$?" != 0 ]; then
+                                    echo ""
+                                    echo "Your self-compiled CURL library in $CURLDIR is slightly outdated."
+                                    echo "This probably means you had the library from a previous installation of UnrealIRCd."
+                                    echo "Because previous versions may be linked to a previous version to c-ares which"
+                                    echo "were not ABI compatible it is highly recommended to remove the version"
+                                    echo "and recompile it. We now have an automatic downloader and installer to compile"
+                                    echo "and install curl for you (in $CURLDIR). You can choose to do so in the question"
+                                    echo "after this one."
+                                    TEST=""
+                                    while [ -z "$TEST" ] ; do
+                                        TEST="Yes"
+                                        echo "Shall I rename $CURLDIR to $CURLDIR.old so it can be rebuild later on?"
+                                        echo $n "[$TEST] -> $c"
+                                        read cc
+                                        if [ -z "$cc" ] ; then
+                                            cc=$TEST
+                                        fi
+                                        case "$cc" in
+                                            [Yy]*)
+                                                rm -rf "$CURLDIR".old
+                                                mv "$CURLDIR" "$CURLDIR".old
+                                                CURLDIR=""
+                                                GOTASYNC=1
+                                                # wow the GOTASYNC=1 is hackish, but we need to prevent the error from later on
+                                                ;;
+                                            [Nn]*)
+                                                echo "Uh, ok... I hope you know what you are doing..."
+                                                echo ""
+                                                ;;
+                                            *)
+                                                echo ""
+                                                echo "You must enter either Yes or No"
+                                                TEST=""
+                                                ;;
+                                        esac
+                                    done
+                            fi
+                        fi
+                fi
+                
+                # Need to output it here, as the HOME check from above may cause this to be no longer relevant.
+                if [ "x$CURLDIR" = "x" -a "$GOTASYNC" != "1" ]; then
+                	echo "Curl library was found in $PREVCURLDIR, but it does not support Asynchronous DNS (not compiled with c-ares)"
+                	echo "so it's of no use to us."
+                fi
+                	
+        fi
+        if [ "x$CURLDIR" = "x" ]; then
+        	# Still empty?
+        	TEST=""
+                while [ -z "$TEST" ] ; do
+                    TEST="Yes"
+                    echo ""
+        	    echo "Do you want me to automatically download and install curl for you?"
+        	    echo "(will install in $HOME/curl)"
+                    echo $n "[$TEST] -> $c"
+                        read cc
+                    if [ -z "$cc" ] ; then
+                        cc=$TEST
+                    fi
+                    case "$cc" in
+                        [Yy]*)
+                            INSTALLCURL="1"
+                            CURLDIR="$HOME/curl"
+                            ;;
+                        [Nn]*)
+                            INSTALLCURL="0"
+                            ;;
+                        *)
+                            echo ""
+                            echo "You must enter either Yes or No"
+                            TEST=""
+                            ;;
+                    esac
+                done
+        fi
+
+	if [ "$INSTALLCURL" != "1" ]; then
+	  TEST=""
+          while [ -z "$TEST" ] ; do
+                  TEST="$CURLDIR"
+                  echo ""
+                  echo "Specify the directory you installed libcurl to"
+                  echo $n "[$TEST] -> $c"
+                  read cc
+                  if [ -z "$cc" ] ; then
+                      cc=$TEST
+                  else
+                      TEST=$cc
+                      CURLDIR=`eval echo $cc` # modified
+                  fi
+          done
+        fi
+fi
+
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$PREFIXAQ" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable prefixes for chanadmin and chanowner?"
+    echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
+    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient,"
+    echo "PJIRC, irssi, CGI:IRC, etc.)"
+    echo "This feature should be enabled/disabled network-wide."
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    PREFIXAQ="1"
+	    ;;
+	[Nn]*)
+	    PREFIXAQ=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$LISTEN_SIZE"
+    echo ""
+    echo "What listen() backlog value do you wish to use?  Some older servers"
+    echo "have problems with more than 5, others work fine with many more."
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	LISTEN_SIZE=$TEST
+	break
+    fi
+    case "$cc" in
+	[1-9]*)
+	    LISTEN_SIZE="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$NICKNAMEHISTORYLENGTH"
+    echo ""
+    echo "How far back do you want to keep the nickname history?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	NICKNAMEHISTORYLENGTH=$TEST
+	break
+    fi
+    case "$cc" in
+	[1-9]*)
+	    NICKNAMEHISTORYLENGTH="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$MAXSENDQLENGTH"
+    echo ""
+    echo "What is the maximum sendq length you wish to have?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	MAXSENDQLENGTH=$TEST
+	break
+    fi
+    case "$cc" in
+	[1-9][0-9][0-9][0-9]*)
+	    MAXSENDQLENGTH="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number greater than or equal to 1000"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$BUFFERPOOL"
+    echo ""
+    echo "How many buffer pools would you like?"
+    echo "This number will be multiplied by MAXSENDQLENGTH."
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	BUFFERPOOL=$TEST
+	break
+    fi
+    case "$cc" in
+	[1-9]*)
+	    BUFFERPOOL="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number"
+	    TEST=""
+	    ;;
+    esac
+
+done
+
+echo ""
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$MAXCONNECTIONS"
+    echo ""
+    echo "How many file descriptors (or sockets) can the IRCd use?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	MAXCONNECTIONS=$TEST
+	break
+    fi
+    case "$cc" in
+	[1-9][0-9][0-9]*)
+	    MAXCONNECTIONS="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must to enter a number greater than or equal to 100"
+	    TEST=""
+	    ;;
+    esac
+done
+if [ -n "$ADVANCED" ] ; then
+	RUN_ADVANCED
+fi
+
+TEST="$EXTRAPARA"
+echo ""
+echo "Would you like to pass any custom parameters to configure?"
+echo "See  \`./configure --help' and write them here:"
+echo $n "[$TEST] -> $c"
+read EXTRAPARA
+if [ -z "$EXTRAPARA" ]; then
+    EXTRAPARA="$TEST"
+fi
+
+rm -f config.settings
+cat > config.settings << __EOF__
+#
+DPATH="$DPATH"
+SPATH="$SPATH"
+INET6="$INET6"
+PREFIXAQ="$PREFIXAQ"
+LISTEN_SIZE="$LISTEN_SIZE"
+MAXSENDQLENGTH="$MAXSENDQLENGTH"
+BUFFERPOOL="$BUFFERPOOL"
+MAXCONNECTIONS="$MAXCONNECTIONS"
+NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
+DEFPERM="$DEFPERM"
+CRYPTOIRCD="$CRYPTOIRCD"
+SSLDIR="$SSLDIR"
+ZIPLINKS="$ZIPLINKS"
+ZIPLINKSDIR="$ZIPLINKSDIR"
+REMOTEINC="$REMOTEINC"
+CURLDIR="$CURLDIR"
+SHOWLISTMODES="$SHOWLISTMODES"
+TOPICNICKISNUH="$TOPICNICKISNUH"
+SHUNNOTICES="$SHUNNOTICES"
+NOOPEROVERRIDE="$NOOPEROVERRIDE"
+DISABLEUSERMOD="$DISABLEUSERMOD"
+OPEROVERRIDEVERIFY="$OPEROVERRIDEVERIFY"
+DISABLEEXTBANSTACKING="$DISABLEEXTBANSTACKING"
+GENCERTIFICATE="$GENCERTIFICATE"
+EXTRAPARA="$EXTRAPARA"
+ADVANCED="$ADVANCED"
+__EOF__
+RUN_CONFIGURE
+cd "$UNREALCWD"
+cat << __EOF__
+
+ _______________________________________________________________________
+|                                                                       |
+|                    UnrealIRCd Compile-Time Config                     |
+|_______________________________________________________________________|
+|_______________________________________________________________________|
+|                                                                       |
+| Now all you have to do is type 'make' and let it compile. When that's |
+| done, you will receive other instructions on what to do next.         |
+|                                                                       |
+|_______________________________________________________________________|
+|_______________________________________________________________________|
+|                        - The UnrealIRCd Team -                        |
+|                                                                       |
+| * Syzop     syzop@unrealircd.com                                      |
+|_______________________________________________________________________|
+__EOF__
+

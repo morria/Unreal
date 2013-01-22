@@ -446,33 +446,31 @@ ConfigItem_except *Find_passworded_userhost(char *realhost, char *nuip)
 u_int read_authfile(char *path, char *file)
 {
 	AuthLine	*l, *Temp = NULL;
-	int		fd, i;
+	int		    i;
 	char		*login = NULL, *password = NULL, *authtype = NULL;
 	char		line[MAX_LINESIZE + 1], *tmp;
 	u_long		linenum = 0;
 	u_int		error = 0;
+    FILE        *fd = NULL;
 
-	if ((fd = open(path, O_RDONLY)) == -1)
-	{
+
+    if ((NULL == (fd = fopen(path, "r"))))
+    {
 		config_error("Error opening file %s: %s",
 			path, strerror(errno));
                 return 0;
 	}
 
-	/* make sure buffer is at empty pos */
-	(void) dgets(-1, NULL, 0);
-
-	while ((i = dgets(fd, line, MAX_LINESIZE)) > 0)
+    while ((NULL != fgets(line, MAX_LINESIZE, fd)))
         {
 		linenum++;
 
-		line[i] = '\0';
 		if (line[0] == '#')
 			continue;
 		if ((tmp = (char *) strchr(line, '\n')))
-                        *tmp = '\0';
-                if ((tmp = (char *) strchr(line, '\r')))
-                        *tmp = '\0';
+            *tmp = '\0';
+        if ((tmp = (char *) strchr(line, '\r')))
+            *tmp = '\0';
 
 		login = strtok(line, ":");
 		if (!login)
@@ -486,6 +484,7 @@ u_int read_authfile(char *path, char *file)
 			break;
 		}
 		authtype = strtok(NULL, ":");
+
 		if (Auth_MyCheckError(linenum, password, authtype) < 0)
 		{
 			error = 1;
@@ -495,7 +494,7 @@ u_int read_authfile(char *path, char *file)
 		AddListItem(l, Temp);
         }
 
-	close(fd);
+    fclose(fd);
 
 	if (error)
 		FreeAuthLines(Temp);

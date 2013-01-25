@@ -1,3 +1,7 @@
+/**
+ * Compile via
+ * make custommodule MODULEFILE=collapse_auth
+ */
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -11,17 +15,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include <fcntl.h>
 #include "h.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
-#ifdef _WIN32
-#include "version.h"
-#endif
+
+#include <curl/curl.h>
 
 #define DEF_MESSAGE		"Authentication failed"
 #define DelHook(x)		if (x) HookDel(x); x = NULL
@@ -82,9 +82,37 @@ DLLFUNC int MOD_UNLOAD(collapse_auth)(int module_unload)
   return MOD_SUCCESS;
 }
 
+static int authentication_status(char *login, char *pass) {
+  CURL *curl = curl_easy_init();
+  CURLcode res;
+  long http_code = 0;
+
+  size_t length = (strlen(login) + strlen(pass) + 2);
+  char *creds = malloc(length * sizeof(char));
+
+  snprintf(creds, length, "%s:%s", login, pass); 
+
+  curl_easy_setopt(curl, CURLOPT_URL,
+                   "http://localhost:8090/api/auth");
+  curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
+  curl_easy_setopt(curl, CURLOPT_USERPWD, creds);
+
+  res = curl_easy_perform(curl);
+
+  if (res == CURLE_OK) {
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+    curl_easy_cleanup(curl);
+  }
+
+  return http_code;
+}
+
 static u_int do_client_auth(aClient *sptr) {
   char tmp[PASSWDLEN+1], *login, *passwd;
   char *realhost, *nuip;
+  int authenticationStatus = 0;
 
   if (BadPtr(sptr->passwd)) {
     sendto_snomask(SNO_USERAUTH, "*** Failed authentication by %s!%s@%s -- "
@@ -93,18 +121,27 @@ static u_int do_client_auth(aClient *sptr) {
     ircd_log(LOG_CLIENT, "Failed authentication by %s!%s@%s -- "
              "no password given",
              sptr->name, sptr->user->username, sptr->user->realhost);
-    return 0;
+    // return 0;
+    return 1;
   }
 
   login = sptr->user->username;
   passwd = sptr->passwd;
 
-  // TODO: Do Lookup via curl
-
+  authenticationStatus =
+    authentication_status(login, passwd);
 
   if (sptr->passwd) {
     MyFree(sptr->passwd);
     sptr->passwd = NULL;
+  }
+
+  if(200 != authenticationStatus) {
+    ircd_log(LOG_CLIENT, "Failed authentication by %s!%s@%s -- "
+             "Authentication Failed",
+             sptr->name, sptr->user->username, sptr->user->realhost);
+    // return 0;
+    return 1;
   }
 
   ircd_log(LOG_CLIENT, "Successful authentication by %s!%s@%s with username %s",

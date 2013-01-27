@@ -23,3 +23,5 @@ src/ircd
 *.so
 *.o
 *.dSYM
+src/include
+src/version.c

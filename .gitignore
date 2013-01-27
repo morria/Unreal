@@ -25,3 +25,4 @@ src/ircd
 *.dSYM
 src/include
 src/version.c
+unrealircd.conf

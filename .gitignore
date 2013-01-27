@@ -26,3 +26,5 @@ src/ircd
 src/include
 src/version.c
 unrealircd.conf
+ircd.pid
+ircd.log

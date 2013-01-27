@@ -22,3 +22,9 @@ unreal
 src/ircd
 *.so
 *.o
+*.dSYM
+src/include
+src/version.c
+unrealircd.conf
+ircd.pid
+ircd.log

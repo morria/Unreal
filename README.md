@@ -1,4 +1,11 @@
-==[ COMPILING ]==
+== This Fork ==
+
+This is a fork of [UnrealIRCD](http://www.unrealircd.com/) with some
+patches and modules meant for [collapse.io](https://collapse.io).
+
+
+== COMPILING ==
+
 To build the ircd, run:
 ./Config
 make
@@ -6,7 +13,8 @@ make
 If you specified an alternative location during ./Config you also need
 to run "make install".
 
-==[ MAKING A CONFIG FILE ]==
+== MAKING A CONFIG FILE ==
+
 If you are new, then you need to create your own configfile:
 
 copy doc/example.conf to your main UnrealIRCd directory and call

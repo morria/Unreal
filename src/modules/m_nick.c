@@ -1052,10 +1052,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
 		if (IsHidden(sptr))
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
-				user->username, user->realhost, user->virthost);
+			ircd_log(LOG_CLIENT, "Connect - %s![%s]@%s [VHOST %s]", nick,
+				decode_username(user->username), user->realhost, user->virthost);
 		else
-			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
+			ircd_log(LOG_CLIENT, "Connect - %s![%s]@%s", nick, decode_username(user->username),
 				user->realhost);
 		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);

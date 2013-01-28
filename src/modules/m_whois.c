@@ -177,7 +177,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 			    parv[0], name,
-			    user->username,
+			    decode_username(user->username),
 			    IsHidden(acptr) ? user->virthost : user->realhost,
 			    acptr->info);
 

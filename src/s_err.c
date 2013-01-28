@@ -30,7 +30,7 @@ static char sccsid[] = "@(#)s_err.c	1.12 11/1/93 (C) 1992 Darren Reed";
 
 static char *replies[] = {
 /* 000 */ NULL,
-/* 001    RPL_WELCOME */  ":%s 001 %s :Welcome to the %s IRC Network %s!%s@%s",
+/* 001    RPL_WELCOME */  ":%s 001 %s :Welcome to the %s IRC Network %s![%s]@%s",
 /* 002    RPL_YOURHOST */ ":%s 002 %s :Your host is %s, running version %s",
 /* 003    RPL_CREATED */  ":%s 003 %s :This server was created %s",
 /* 004    RPL_MYINFO */   ":%s 004 %s %s %s %s %s",

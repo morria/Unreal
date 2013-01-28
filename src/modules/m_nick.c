@@ -1058,7 +1058,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			ircd_log(LOG_CLIENT, "Connect - %s![%s]@%s", nick, decode_username(user->username),
 				user->realhost);
 		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
-		    ircnetwork, nick, user->username, user->realhost);
+		    ircnetwork, nick, decode_username(user->username), user->realhost);
 		/* This is a duplicate of the NOTICE but see below... */
 			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
 			    me.name, version);

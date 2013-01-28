@@ -508,8 +508,8 @@ char has_common_chan = 0;
 		/* if they only want people with a certain username */
 		if (wfl.want_user != WHO_DONTCARE)
 		{
-			if (((wfl.want_user == WHO_WANT) && match(wfl.user, acptr->user->username)) ||
-			    ((wfl.want_user == WHO_DONTWANT) && !match(wfl.user, acptr->user->username)))
+			if (((wfl.want_user == WHO_WANT) && match(wfl.user, decode_username(acptr->user->username))) ||
+			    ((wfl.want_user == WHO_DONTWANT) && !match(wfl.user, decode_username(acptr->user->username))))
 			{
 				return WHO_CANTSEE;
 			}
@@ -687,7 +687,7 @@ int oper = IsAnOper(sptr);
 				 * Yes, I like readable if's -- Syzop.
 				 */
 				if (!match(mask, acptr->name) || !match(mask, acptr->user->realhost) ||
-				    !match(mask, acptr->user->username))
+				    !match(mask, decode_username(acptr->user->username)))
 					goto matchok;
 				if (IsHidden(acptr) && !match(mask, acptr->user->virthost))
 					goto matchok;
@@ -758,7 +758,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 	if (IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES)
 	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,
         	     channel,       /* channel name */
-	             acptr->user->username, /* user name */
+	             decode_username(acptr->user->username), /* user name */
         	     host,		    /* hostname */
 	             "hidden",              /* let's hide the server from normal users if the server is a uline and HIDE_ULINES is on */
         	     acptr->name,           /* nick */
@@ -770,7 +770,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 	else
 		sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,      
 		     channel,       /* channel name */
-		     acptr->user->username,      /* user name */
+		     decode_username(acptr->user->username),      /* user name */
 		     host,		         /* hostname */
 		     acptr->user->server,        /* server name */
 		     acptr->name,                /* nick */

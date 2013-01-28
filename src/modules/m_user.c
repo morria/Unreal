@@ -94,6 +94,7 @@ DLLFUNC CMD_FUNC(m_user)
 	char *sstamp = NULL;
 	anUser *user;
 	aClient *acptr;
+	char enc_username[USERLEN + 1];
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
@@ -104,8 +105,6 @@ DLLFUNC CMD_FUNC(m_user)
 		    "This port is for servers only");
 	}
 
-	if (parc > 2 && (username = (char *)index(parv[1], '@')))
-		*username = '\0';
 	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
 	    *parv[3] == '\0' || *parv[4] == '\0')
 	{
@@ -124,6 +123,11 @@ DLLFUNC CMD_FUNC(m_user)
 	username = (parc < 2 || BadPtr(parv[1])) ? "<bad-boy>" : parv[1];
 	host = (parc < 3 || BadPtr(parv[2])) ? "<nohost>" : parv[2];
 	server = (parc < 4 || BadPtr(parv[3])) ? "<noserver>" : parv[3];
+
+	/* Encode username to base64 for symbol support */
+
+	(void) b64_encode(username, strlen(username), enc_username, USERLEN);
+	username = enc_username;
 
 	/* This we can remove as soon as all servers have upgraded. */
 

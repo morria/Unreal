@@ -172,7 +172,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 				/* comply with RFC1123                     */
 
 #define	NICKLEN		30
-#define	USERLEN		10
+#define	USERLEN		63
 #define	REALLEN	 	50
 #define	TOPICLEN	307
 #define	CHANNELLEN	32

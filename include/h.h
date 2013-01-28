@@ -344,6 +344,7 @@ extern char *myctime(time_t), *date(time_t);
 extern int exit_client(aClient *, aClient *, aClient *, char *);
 extern void initstats(), tstats(aClient *, char *);
 extern char *check_string(char *);
+extern char *decode_username(char *);
 extern char *make_nick_user_host(char *, char *, char *);
 extern inline char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
 extern char *make_user_host(char *, char *);

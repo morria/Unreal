@@ -258,6 +258,16 @@ char *make_nick_user_host(char *nick, char *name, char *host)
 	return make_nick_user_host_r(namebuf, nick, name, host);
 }
 
+/*
+ * Decode a base64'd username
+ */
+char *decode_username(char *username)
+{
+	static char result[USERLEN + 1];
+
+	(void) b64_decode(username, result, USERLEN);
+	return result;
+}
 
 /**
  ** myctime()
